@@ -3,12 +3,11 @@ import math
 import time
 from typing import Callable, Tuple
 
-
     #    start     Vertex     goal
     #     |----------|---------|
     #         g(n)      h(n)
     #     |--------------------|
-    #       f(n) = g(n) + h(n)
+    #           g(n) + h(n)
 
 class Vertex:
     def __init__(self, x, y, g=0, h=0, parent=None):
@@ -18,6 +17,23 @@ class Vertex:
         self.h = h
         self.parent = parent if parent is not None else self
         
+    def calculate_g(self, current, successor) -> None:
+        if (successor.x < current.x and successor.y == current.y): #Successor is to the left
+            self.g = current.g + 1
+        if (successor.x > current.x and successor.y == current.y): #Successor is to the right
+            self.g = current.g + 1
+        if (successor.x == current.x and successor.y < current.y): #Successor is above
+            self.g = current.g + 1
+        if (successor.x == current.x and successor.y > current.y): #Successor is under
+            self.g = current.g + 1
+        self.g = current.g + math.sqrt(2); #diagonal
+
+    def calculate_h(self, vertex) -> None: 
+        self.h = math.sqrt(2) * \
+        min(abs(vertex.x - self.goal.x), abs(vertex.y - self.goal.y)) + \
+        max(abs(vertex.x - self.goal.x), abs(vertex.y - self.goal.y)) - \
+        min(abs(vertex.x - self.goal.x), abs(vertex.y - self.goal.y))
+    
     def __lt__(self, other):
         return self.g  < other.g
 
@@ -62,25 +78,6 @@ class AStar:
 
     def init_grid(self, rows, cols):
         return [[0 for col in range(cols)] for row in range(rows)]
-    
-    def calculate_g(self, current, successor) -> float:
-        if (successor.x < current.x and successor.y == current.y): #Successor is to the left
-            return current.g + 1
-        if (successor.x > current.x and successor.y == current.y): #Successor is to the right
-            return current.g + 1
-        if (successor.x == current.x and successor.y < current.y): #Successor is above
-            return current.g + 1
-        if (successor.x == current.x and successor.y > current.y): #Successor is under
-            return current.g + 1
-        return current.g + math.sqrt(2); #diagonal
-
-    def calculate_h(self, vertex: Vertex) -> float: 
-        result = math.sqrt(2) * \
-        min(abs(vertex.x - self.goal.x), abs(vertex.y - self.goal.y)) + \
-        max(abs(vertex.x - self.goal.x), abs(vertex.y - self.goal.y)) - \
-        min(abs(vertex.x - self.goal.x), abs(vertex.y - self.goal.y)) \
-    
-        return result
 
     def threshold_float_comparison(self, f_a, f_b) -> None:
         THRESHOLD = .0001
@@ -95,69 +92,61 @@ class AStar:
         y = vertex.y - 1
         if(y>=0):
             successor = Vertex(vertex.x, y)
-            successor.parent = vertex
-            successor.g = self.calculate_g(vertex, successor)
-            successor.h = self.calculate_h(successor)
+            successor.calculate_g(vertex, successor)
+            successor.calculate_h(vertex, successor)     
             self.neighbors[vertex].append(successor)
 
         x = vertex.x + 1
         if(x < len(self.grid[0])):
             successor = Vertex(x, vertex.y)
-            successor.parent = vertex
-            successor.g = self.calculate_g(vertex, successor)
-            successor.h = self.calculate_h(successor)
+            successor.calculate_g(vertex, successor)
+            successor.calculate_h(vertex, successor)
             self.neighbors[vertex].append(successor)
 
         y = vertex.y + 1
         if(y < len(self.grid)):
             successor = Vertex(vertex.x, y)
-            successor.parent = vertex
-            successor.g = self.calculate_g(vertex, successor)
-            successor.h = self.calculate_h(successor)
+            successor.calculate_g(vertex, successor)
+            successor.calculate_h(vertex, successor)
             self.neighbors[vertex].append(successor)
     
         x = vertex.x - 1
         if(x >= 0):
             successor = Vertex(x, vertex.y)
-            successor.parent = vertex
-            successor.g = self.calculate_g(vertex, successor)
-            successor.h = self.calculate_h(successor)
+            successor.calculate_g(vertex, successor)
+            successor.calculate_h(vertex, successor)
             self.neighbors[vertex].append(successor)
         
         x = vertex.x + 1
         y = vertex.y - 1
         if(y >= 0 and x < len(self.grid[0])):
             successor = Vertex(x, y)
-            successor.parent = vertex
-            successor.g = self.calculate_g(vertex, successor)
-            successor.h = self.calculate_h(successor)
+            successor.calculate_g(vertex, successor)
+            successor.calculate_h(vertex, successor)
             self.neighbors[vertex].append(successor)
         
         x = vertex.x - 1
         y = vertex.y - 1
         if(y >= 0 and x >= 0):
             successor = Vertex(x, y)
-            successor.parent = vertex
-            successor.g = self.calculate_g(vertex, successor)
-            successor.h = self.calculate_h(successor)
+            successor.calculate_g(vertex, successor)
+            successor.calculate_h(vertex, successor)
             self.neighbors[vertex].append(successor)
 
         x = vertex.x + 1
         y = vertex.y + 1
         if(y < len(self.grid) and x < len(self.grid[0])):
             successor = Vertex(x, y)
-            successor.parent = vertex
-            successor.g = self.calculate_g(vertex, successor)
-            successor.h = self.calculate_h(successor)
+            successor.calculate_g(vertex, successor)
+            successor.calculate_h(vertex, successor)
             self.neighbors[vertex].append(successor)
 
         x = vertex.x - 1
         y = vertex.y + 1
         if(y < len(self.grid) and x >= 0):
             successor = Vertex(x, y)
-            successor.parent = vertex
-            successor.g = self.calculate_g(vertex, successor)
-            successor.h = self.calculate_h(successor)
+            successor.calculate_g(vertex, successor)
+            successor.calculate_h(vertex, successor)
             self.neighbors[vertex].append(successor)
 
     def tie_break(self, successor):
