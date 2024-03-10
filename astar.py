@@ -1,6 +1,7 @@
 import heapq
 import math
 import time
+import random
 from typing import Callable, Tuple
 
     #    start     Vertex     goal
@@ -28,11 +29,11 @@ class Vertex:
             self.g = current.g + 1
         self.g = current.g + math.sqrt(2); #diagonal
 
-    def calculate_h(self, vertex) -> None: 
+    def calculate_h(self, goal) -> None: 
         self.h = math.sqrt(2) * \
-        min(abs(vertex.x - self.goal.x), abs(vertex.y - self.goal.y)) + \
-        max(abs(vertex.x - self.goal.x), abs(vertex.y - self.goal.y)) - \
-        min(abs(vertex.x - self.goal.x), abs(vertex.y - self.goal.y))
+        min(abs(self.x - goal.x), abs(self.y - goal.y)) + \
+        max(abs(self.x - goal.x), abs(self.y - goal.y)) - \
+        min(abs(self.x - goal.x), abs(self.y - goal.y))
     
     def __lt__(self, other):
         return self.g  < other.g
@@ -93,28 +94,28 @@ class AStar:
         if(y>=0):
             successor = Vertex(vertex.x, y)
             successor.calculate_g(vertex, successor)
-            successor.calculate_h(vertex, successor)     
+            successor.calculate_h(self.goal)
             self.neighbors[vertex].append(successor)
 
         x = vertex.x + 1
         if(x < len(self.grid[0])):
             successor = Vertex(x, vertex.y)
             successor.calculate_g(vertex, successor)
-            successor.calculate_h(vertex, successor)
+            successor.calculate_h(self.goal)
             self.neighbors[vertex].append(successor)
 
         y = vertex.y + 1
         if(y < len(self.grid)):
             successor = Vertex(vertex.x, y)
             successor.calculate_g(vertex, successor)
-            successor.calculate_h(vertex, successor)
+            successor.calculate_h(self.goal)
             self.neighbors[vertex].append(successor)
     
         x = vertex.x - 1
         if(x >= 0):
             successor = Vertex(x, vertex.y)
             successor.calculate_g(vertex, successor)
-            successor.calculate_h(vertex, successor)
+            successor.calculate_h(self.goal)
             self.neighbors[vertex].append(successor)
         
         x = vertex.x + 1
@@ -122,7 +123,7 @@ class AStar:
         if(y >= 0 and x < len(self.grid[0])):
             successor = Vertex(x, y)
             successor.calculate_g(vertex, successor)
-            successor.calculate_h(vertex, successor)
+            successor.calculate_h(self.goal)
             self.neighbors[vertex].append(successor)
         
         x = vertex.x - 1
@@ -130,7 +131,7 @@ class AStar:
         if(y >= 0 and x >= 0):
             successor = Vertex(x, y)
             successor.calculate_g(vertex, successor)
-            successor.calculate_h(vertex, successor)
+            successor.calculate_h(self.goal)
             self.neighbors[vertex].append(successor)
 
         x = vertex.x + 1
@@ -138,7 +139,7 @@ class AStar:
         if(y < len(self.grid) and x < len(self.grid[0])):
             successor = Vertex(x, y)
             successor.calculate_g(vertex, successor)
-            successor.calculate_h(vertex, successor)
+            successor.calculate_h(self.goal)
             self.neighbors[vertex].append(successor)
 
         x = vertex.x - 1
@@ -146,7 +147,7 @@ class AStar:
         if(y < len(self.grid) and x >= 0):
             successor = Vertex(x, y)
             successor.calculate_g(vertex, successor)
-            successor.calculate_h(vertex, successor)
+            successor.calculate_h(self.goal)
             self.neighbors[vertex].append(successor)
 
     def tie_break(self, successor):
@@ -169,7 +170,7 @@ class AStar:
             self.closed.append(current)
             self.fringe.remove_if(lambda n: self.visited[n] == True)
             self.get_neighbors(current)
-            print(len(self.neighbors[current]))
+            print(len(self.neighbors[current]), "neighbors")
             for successor in self.neighbors[current]:
                 if successor not in self.closed:
                     verticies = [entry[1] for entry in self.fringe.heap]
@@ -182,3 +183,124 @@ class AStar:
                         self.tie_break(successor)
                     # print(f"Added ( {successor.x}, {successor.y} ) to fringe")
         return self.closed
+
+class AStarBlocked(AStar):
+    def __init__(self, start: Tuple[int, int], goal: Tuple[int, int], rows, cols) -> None:
+        super().__init__(start, goal, rows, cols)
+        self.blocked = self.init_blocked(rows, cols)
+
+    def init_blocked(self, rows, cols):
+        blocked = []
+        count = 0
+        blocked_cell_count = 0
+        if rows == cols:
+            blocked_cell_count = (rows - 1) * (cols - 1) // 3
+            print (blocked_cell_count)
+        else:
+            large = max(rows, cols)
+            small = min(rows, cols)
+            blocked_cell_count = (large - 1) * (small) // 3
+
+        while count < blocked_cell_count:
+            col = random.randint(0, cols - 2)
+            row = random.randint(0, rows - 2)
+            
+            if (col, row) not in blocked:
+                blocked.append((col, row))
+                count += 1
+        return blocked
+      
+    
+    def init_grid(self, rows, cols):
+        return [[0 for col in range(cols)] for row in range(rows)]
+    
+    def get_neighbors(self, vertex: Vertex) -> None:
+        def is_blocked(x, y) -> bool:
+            return (x, y) in self.blocked
+        
+        self.neighbors[vertex] = []
+        self_blocked = is_blocked(vertex.x, vertex.y)
+        
+
+        x = vertex.x - 1
+        y = vertex.y - 1
+        north_west_successor = None
+        north_west_blocked = is_blocked(x, y)
+        if y >= 0 and x >= 0 and not north_west_blocked:
+            north_west_successor = Vertex(x, y)
+            north_west_successor.calculate_g(vertex, north_west_successor)
+            north_west_successor.calculate_h(self.goal)
+            self.neighbors[vertex].append(north_west_successor)
+        
+        x = vertex.x
+        y = vertex.y - 1
+        north_successor = None
+        north_blocked = is_blocked(x, y) if y > 0 else True
+        if y >= 0 and not (north_west_blocked and north_blocked) and x < len(self.grid[0]) - 1:
+            north_successor = Vertex(x, y)
+            north_successor.calculate_g(vertex, north_successor)
+            north_successor.calculate_h(self.goal)
+            self.neighbors[vertex].append(north_successor)
+
+        x = vertex.x + 1
+        y = vertex.y
+        east_successor = None
+        print("north_blocked ", north_blocked)
+        if x < len(self.grid[0]) and not (self_blocked and north_blocked) and not (north_blocked and y == len(self.grid) -1):
+            east_successor = Vertex(x, y)
+            east_successor.calculate_g(vertex, east_successor)
+            east_successor.calculate_h(self.goal)
+            self.neighbors[vertex].append(east_successor)
+
+        x = vertex.x - 1
+        y = vertex.y
+        west_successor = None
+        west_blocked = is_blocked(x, y)
+        print("north_west_blocked ", north_west_blocked)
+        if x >= 0 and (not north_west_blocked and y < len(self.grid) - 1) and not (west_blocked and north_west_blocked):
+            west_successor = Vertex(x, y)
+            west_successor.calculate_g(vertex, west_successor)
+            west_successor.calculate_h(self.goal)
+            self.neighbors[vertex].append(west_successor)
+        
+        x = vertex.x
+        y = vertex.y + 1
+        south_successor = None
+        if y < len(self.grid) and not (self_blocked and west_blocked):
+            south_successor = Vertex(x, y)
+            south_successor.calculate_g(vertex, south_successor)
+            south_successor.calculate_h(self.goal)
+            self.neighbors[vertex].append(south_successor)
+        
+        x = vertex.x + 1
+        y = vertex.y - 1
+        north_east_successor = None
+        if y >= 0 and x < len(self.grid[0]) and not north_blocked:
+            north_east_successor = Vertex(x, y)
+            north_east_successor.calculate_g(vertex, north_east_successor)
+            north_east_successor.calculate_h(self.goal)
+            self.neighbors[vertex].append(north_east_successor)
+
+        x = vertex.x + 1
+        y = vertex.y + 1
+        south_east_successor = None
+        if y < len(self.grid) and x < len(self.grid[0]) and not self_blocked:
+            south_east_successor = Vertex(x, y)
+            south_east_successor.calculate_g(vertex, south_east_successor)
+            south_east_successor.calculate_h(self.goal)
+            self.neighbors[vertex].append(south_east_successor)
+        
+        x = vertex.x - 1
+        y = vertex.y + 1
+        south_west_successor = None
+        if y < len(self.grid) and x >= 0 and not west_blocked:
+            south_west_successor = Vertex(x, y)
+            south_west_successor.calculate_g(vertex, south_west_successor)
+            south_west_successor.calculate_h(self.goal)
+            self.neighbors[vertex].append(south_west_successor)
+
+        print(self.blocked)
+        print("is self blocked", self_blocked)
+        
+        for vertex in self.neighbors[vertex]:
+            print(vertex.x, vertex.y)
