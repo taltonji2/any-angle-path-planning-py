@@ -221,7 +221,6 @@ class AStarBlocked(AStar):
         self.neighbors[vertex] = []
         self_blocked = is_blocked(vertex.x, vertex.y)
         
-
         x = vertex.x - 1
         y = vertex.y - 1
         north_west_successor = None
@@ -245,7 +244,6 @@ class AStarBlocked(AStar):
         x = vertex.x + 1
         y = vertex.y
         east_successor = None
-        print("north_blocked ", north_blocked)
         if x < len(self.grid[0]) and not (self_blocked and north_blocked) and not (north_blocked and y == len(self.grid) -1):
             east_successor = Vertex(x, y)
             east_successor.calculate_g(vertex, east_successor)
@@ -256,7 +254,6 @@ class AStarBlocked(AStar):
         y = vertex.y
         west_successor = None
         west_blocked = is_blocked(x, y)
-        print("north_west_blocked ", north_west_blocked)
         if x >= 0 and (not north_west_blocked and y < len(self.grid) - 1) and not (west_blocked and north_west_blocked):
             west_successor = Vertex(x, y)
             west_successor.calculate_g(vertex, west_successor)
