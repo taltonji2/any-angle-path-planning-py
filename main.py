@@ -7,7 +7,8 @@ def main():
     astar = AStarBlocked(start, goal, rows, cols)
     (traversal, blocked) = astar.run()
     grid_renderer = GridRenderer()
-    print(traversal, blocked)
+    print(traversal)
+    print(blocked)
     grid_renderer.run(traversal, blocked) 
 
 if __name__ == "__main__":

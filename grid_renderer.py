@@ -62,8 +62,15 @@ class GridRenderer:
             if 0 <= coord[0] < self.grid_size and 0 <= coord[1] < self.grid_size:
                 self.draw_rectangle(screen, coord)
 
-        for vertex in traversal_array:
-            self.draw_circle(screen, vertex, self.red)
+        prev = None
+        for coordinate_pair in traversal_array:
+            if prev != None:
+                prev_x = (prev[0] + self.padding_size) * self.cell_size
+                prev_y = (prev[1] + self.padding_size) * self.cell_size
+                coordinate_pair_x = (coordinate_pair[0] + self.padding_size) * self.cell_size
+                coordinate_pair_y = (coordinate_pair[1] + self.padding_size) * self.cell_size
+                pygame.draw.line(screen, self.red, (prev_x, prev_y), (coordinate_pair_x,coordinate_pair_y))
+            prev = self.draw_circle(screen, coordinate_pair, self.red)
 
         pygame.display.flip()
         pygame.time.Clock().tick(10)
@@ -74,12 +81,14 @@ class GridRenderer:
         rect_width = self.cell_size
         rect_height = self.cell_size
         pygame.draw.rect(screen, self.white, (rect_x, rect_y, rect_width, rect_height))
-    
+
+
     def draw_circle(self, screen, pos, color):
         circle_radius = self.cell_size // 6
         circle_center = ((pos[0] + self.padding_size) * self.cell_size, (pos[1] + self.padding_size) * self.cell_size)
         pygame.draw.circle(screen, color, circle_center, circle_radius)
-
+        return pos
+    
     def run(self, traversal_array, blocked=[]):
         pygame.init()
         pygame.display.set_caption("A*")
