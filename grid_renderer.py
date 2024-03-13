@@ -14,7 +14,7 @@ class GridRenderer:
         self.screen_width = (grid_size + 2 * padding_size) * cell_size
         self.screen_height = (grid_size + 2 * padding_size) * cell_size
 
-    def draw_grid(self, traversal_array):
+    def draw_grid(self, traversal_array, blocked):
         screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         font = pygame.font.Font(pygame.font.get_default_font(), 20)
         screen.fill(self.black)
@@ -57,18 +57,30 @@ class GridRenderer:
         for y in range(self.cell_size * self.padding_size, self.screen_height - (self.cell_size * self.padding_size) + 1, self.cell_size):
             pygame.draw.line(screen, self.white, (self.cell_size * self.padding_size, y), (self.screen_width - self.cell_size * self.padding_size, y))
         
+
+        for coord in blocked:
+            if 0 <= coord[0] < self.grid_size and 0 <= coord[1] < self.grid_size:
+                self.draw_rectangle(screen, coord)
+
         for vertex in traversal_array:
             self.draw_circle(screen, vertex, self.red)
 
         pygame.display.flip()
         pygame.time.Clock().tick(10)
 
+    def draw_rectangle(self, screen, pos):
+        rect_x = (pos[0] + self.padding_size) * self.cell_size
+        rect_y = (pos[1] + self.padding_size) * self.cell_size
+        rect_width = self.cell_size
+        rect_height = self.cell_size
+        pygame.draw.rect(screen, self.white, (rect_x, rect_y, rect_width, rect_height))
+    
     def draw_circle(self, screen, pos, color):
         circle_radius = self.cell_size // 6
         circle_center = ((pos[0] + self.padding_size) * self.cell_size, (pos[1] + self.padding_size) * self.cell_size)
         pygame.draw.circle(screen, color, circle_center, circle_radius)
 
-    def run(self, traversal_array):
+    def run(self, traversal_array, blocked=[]):
         pygame.init()
         pygame.display.set_caption("A*")
         running = True
@@ -76,7 +88,7 @@ class GridRenderer:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-            self.draw_grid(traversal_array)
+            self.draw_grid(traversal_array, blocked)
 
         pygame.quit()
         sys.exit()

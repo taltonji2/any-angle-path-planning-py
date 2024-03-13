@@ -160,7 +160,7 @@ class AStar:
         while len(self.fringe.heap):
             current = self.fringe.pop()
             print("\n visiting ", current.x, current.y, current.g)
-            time.sleep(1)
+            # time.sleep(1)
             if (current.x == self.goal.x and current.y == self.goal.y):
                 self.closed.append(current)
                 print("Found it!")
@@ -184,6 +184,7 @@ class AStar:
                     # print(f"Added ( {successor.x}, {successor.y} ) to fringe")
         coordinate_pairs = [(vertex.x, vertex.y) for vertex in self.closed]
         return coordinate_pairs
+    
 class AStarBlocked(AStar):
     def __init__(self, start: Tuple[int, int], goal: Tuple[int, int], rows, cols) -> None:
         super().__init__(start, goal, rows, cols)
@@ -296,10 +297,12 @@ class AStarBlocked(AStar):
             south_west_successor.calculate_h(self.goal)
             self.neighbors[vertex].append(south_west_successor)
 
-        print(self.blocked)
+        print("blocked ", self.blocked)
         # print("is self blocked", self_blocked)
         
         # for vertex in self.neighbors[vertex]:
         #     print(vertex.x, vertex.y)
-        coordinate_pairs = [(vertex.x, vertex.y) for vertex in self.closed]
-        return coordinate_pairs
+
+    def run(self):
+        coordinate_pairs = super().run()
+        return (coordinate_pairs, self.blocked)
