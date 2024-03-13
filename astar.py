@@ -182,8 +182,8 @@ class AStar:
                     if len(self.fringe.heap) and self.fringe.heap[0] == successor and self.threshold_float_comparison(successor.f, self.fringe.heap[0].f):
                         self.tie_break(successor)
                     # print(f"Added ( {successor.x}, {successor.y} ) to fringe")
-        return self.closed
-
+        coordinate_pairs = [(vertex.x, vertex.y) for vertex in self.closed]
+        return coordinate_pairs
 class AStarBlocked(AStar):
     def __init__(self, start: Tuple[int, int], goal: Tuple[int, int], rows, cols) -> None:
         super().__init__(start, goal, rows, cols)
@@ -297,7 +297,9 @@ class AStarBlocked(AStar):
             self.neighbors[vertex].append(south_west_successor)
 
         print(self.blocked)
-        print("is self blocked", self_blocked)
+        # print("is self blocked", self_blocked)
         
-        for vertex in self.neighbors[vertex]:
-            print(vertex.x, vertex.y)
+        # for vertex in self.neighbors[vertex]:
+        #     print(vertex.x, vertex.y)
+        coordinate_pairs = [(vertex.x, vertex.y) for vertex in self.closed]
+        return coordinate_pairs
