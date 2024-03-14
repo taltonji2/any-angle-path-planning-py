@@ -67,9 +67,9 @@ class AStar:
         coordinate_pairs = [(vertex.x, vertex.y) for vertex in total_path]
         return coordinate_pairs
 
-    def calculate_d(self, current, successor) -> None:
-        dx = abs(successor.x - current.x)
-        dy = abs(successor.y - current.y)
+    def calculate_d(self, current, neighbor) -> None:
+        dx = abs(neighbor.x - current.x)
+        dy = abs(neighbor.y - current.y)
         
         if dx == 1 and dy == 0:
             return 1
@@ -88,47 +88,47 @@ class AStar:
         self.neighbors[vertex] = []
         y = vertex.y - 1
         if(y>=0):
-            successor = Vertex(vertex.x, y, self)
-            self.neighbors[vertex].append(successor)
+            neighbor = Vertex(vertex.x, y, self)
+            self.neighbors[vertex].append(neighbor)
 
         x = vertex.x + 1
         if(x < len(self.grid[0])):
-            successor = Vertex(x, vertex.y, self)
-            self.neighbors[vertex].append(successor)
+            neighbor = Vertex(x, vertex.y, self)
+            self.neighbors[vertex].append(neighbor)
 
         y = vertex.y + 1
         if(y < len(self.grid)):
-            successor = Vertex(vertex.x, y, self)
-            self.neighbors[vertex].append(successor)
+            neighbor = Vertex(vertex.x, y, self)
+            self.neighbors[vertex].append(neighbor)
     
         x = vertex.x - 1
         if(x >= 0):
-            successor = Vertex(x, vertex.y, self)
-            self.neighbors[vertex].append(successor)
+            neighbor = Vertex(x, vertex.y, self)
+            self.neighbors[vertex].append(neighbor)
         
         x = vertex.x + 1
         y = vertex.y - 1
         if(y >= 0 and x < len(self.grid[0])):
-            successor = Vertex(x, y, self)
-            self.neighbors[vertex].append(successor)
+            neighbor = Vertex(x, y, self)
+            self.neighbors[vertex].append(neighbor)
         
         x = vertex.x - 1
         y = vertex.y - 1
         if(y >= 0 and x >= 0):
-            successor = Vertex(x, y, self)
-            self.neighbors[vertex].append(successor)
+            neighbor = Vertex(x, y, self)
+            self.neighbors[vertex].append(neighbor)
 
         x = vertex.x + 1
         y = vertex.y + 1
         if(y < len(self.grid) and x < len(self.grid[0])):
-            successor = Vertex(x, y, self)
-            self.neighbors[vertex].append(successor)
+            neighbor = Vertex(x, y, self)
+            self.neighbors[vertex].append(neighbor)
 
         x = vertex.x - 1
         y = vertex.y + 1
         if(y < len(self.grid) and x >= 0):
-            successor = Vertex(x, y, self)
-            self.neighbors[vertex].append(successor)
+            neighbor = Vertex(x, y, self)
+            self.neighbors[vertex].append(neighbor)
 
     def run(self) -> None:
         self.open_set.push(0, self.start)
@@ -155,20 +155,20 @@ class AStar:
                 print("No path")
                 return
 
-            for successor in self.neighbors[current]:
-                tenative_g = self.g_score[current] + self.calculate_d(current, successor)
-                successor_g  = self.g_score[successor] if successor in self.g_score else math.inf
+            for neighbor in self.neighbors[current]:
+                tenative_g = self.g_score[current] + self.calculate_d(current, neighbor)
+                neighbor_g  = self.g_score[neighbor] if neighbor in self.g_score else math.inf
         
-                if tenative_g < successor_g:
-                    self.calculate_h(successor)
-                    self.came_from[successor] = current
-                    self.g_score[successor] = tenative_g
-                    self.f_score[successor] = tenative_g + self.h_score[successor]
+                if tenative_g < neighbor_g:
+                    self.calculate_h(neighbor)
+                    self.came_from[neighbor] = current
+                    self.g_score[neighbor] = tenative_g
+                    self.f_score[neighbor] = tenative_g + self.h_score[neighbor]
         
-                    print(f"{successor.x} {successor.y} g_score {tenative_g}")
+                    print(f"{neighbor.x} {neighbor.y} g_score {tenative_g} h_score {self.h_score[neighbor]}")
         
-                    if successor not in self.open_set.heap:
-                        self.open_set.push(self.f_score[successor], successor)
+                    if neighbor not in self.open_set.heap:
+                        self.open_set.push(self.f_score[neighbor], neighbor)
     
 class AStarBlocked(AStar):
     def __init__(self, start: Tuple[int, int], goal: Tuple[int, int], rows, cols) -> None:
@@ -209,62 +209,62 @@ class AStarBlocked(AStar):
         
         x = vertex.x - 1
         y = vertex.y - 1
-        north_west_successor = None
+        north_west_neighbor = None
         north_west_blocked = is_blocked(x, y)
         if y >= 0 and x >= 0 and not north_west_blocked:
-            north_west_successor = Vertex(x, y, self)
-            self.neighbors[vertex].append(north_west_successor)
+            north_west_neighbor = Vertex(x, y, self)
+            self.neighbors[vertex].append(north_west_neighbor)
         
         x = vertex.x
         y = vertex.y - 1
-        north_successor = None
+        north_neighbor = None
         north_blocked = is_blocked(x, y) if y > 0 else True
         if y >= 0 and not (north_west_blocked and north_blocked) and x < len(self.grid[0]) - 1 and (x == 0 and not north_blocked):
-            north_successor = Vertex(x, y, self)
-            self.neighbors[vertex].append(north_successor)
+            north_neighbor = Vertex(x, y, self)
+            self.neighbors[vertex].append(north_neighbor)
 
         x = vertex.x + 1
         y = vertex.y
-        east_successor = None
+        east_neighbor = None
         if x < len(self.grid[0]) and not (self_blocked and north_blocked) and not (north_blocked and y == len(self.grid) -1):
-            east_successor = Vertex(x, y, self)
-            self.neighbors[vertex].append(east_successor)
+            east_neighbor = Vertex(x, y, self)
+            self.neighbors[vertex].append(east_neighbor)
 
         x = vertex.x - 1
         y = vertex.y
-        west_successor = None
+        west_neighbor = None
         west_blocked = is_blocked(x, y)
         if (x == 0 and not west_blocked) and (not north_west_blocked and y < len(self.grid) - 1) and not (west_blocked and north_west_blocked):
-            west_successor = Vertex(x, y, self)
-            self.neighbors[vertex].append(west_successor)
+            west_neighbor = Vertex(x, y, self)
+            self.neighbors[vertex].append(west_neighbor)
         
         x = vertex.x
         y = vertex.y + 1
-        south_successor = None
+        south_neighbor = None
         if y < len(self.grid) and not (self_blocked and west_blocked) and (x == 0 and not self_blocked):
-            south_successor = Vertex(x, y, self)
-            self.neighbors[vertex].append(south_successor)
+            south_neighbor = Vertex(x, y, self)
+            self.neighbors[vertex].append(south_neighbor)
         
         x = vertex.x + 1
         y = vertex.y - 1
-        north_east_successor = None
+        north_east_neighbor = None
         if y >= 0 and x < len(self.grid[0]) and not north_blocked:
-            north_east_successor = Vertex(x, y, self)
-            self.neighbors[vertex].append(north_east_successor)
+            north_east_neighbor = Vertex(x, y, self)
+            self.neighbors[vertex].append(north_east_neighbor)
 
         x = vertex.x + 1
         y = vertex.y + 1
-        south_east_successor = None
+        south_east_neighbor = None
         if y < len(self.grid) and x < len(self.grid[0]) and not self_blocked:
-            south_east_successor = Vertex(x, y, self)
-            self.neighbors[vertex].append(south_east_successor)
+            south_east_neighbor = Vertex(x, y, self)
+            self.neighbors[vertex].append(south_east_neighbor)
         
         x = vertex.x - 1
         y = vertex.y + 1
-        south_west_successor = None
+        south_west_neighbor = None
         if y < len(self.grid) and x >= 0 and not west_blocked:
-            south_west_successor = Vertex(x, y, self)
-            self.neighbors[vertex].append(south_west_successor)
+            south_west_neighbor = Vertex(x, y, self)
+            self.neighbors[vertex].append(south_west_neighbor)
         
     def run(self):
         coordinate_pairs = super().run()
