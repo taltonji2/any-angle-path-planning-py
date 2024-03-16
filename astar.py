@@ -8,7 +8,7 @@ from typing import Callable, Tuple
     #     |----------|---------|
     #         g(n)      h(n)
     #     |--------------------|
-    #           g(n) + h(n)
+    #       f(n) = g(n) + h(n)
 
 class Vertex:
     def __init__(self, x, y, astar):
@@ -176,7 +176,7 @@ class AStarBlocked(AStar):
         self.blocked = self.init_blocked(rows, cols)
 
     def init_blocked(self, rows, cols):
-        blocked = [(0,1)]
+        blocked = []
         count = 0
         blocked_cell_count = 0
         if rows == cols:
@@ -187,8 +187,8 @@ class AStarBlocked(AStar):
             blocked_cell_count = (large - 1) * (small) // 3
 
         while count < blocked_cell_count:
-            col = random.randint(0, cols - 1)
-            row = random.randint(0, rows - 1)
+            col = random.randint(0, cols - 2)
+            row = random.randint(0, rows - 2)
             
             if (col, row) not in blocked:
                 blocked.append((col, row))
@@ -205,65 +205,84 @@ class AStarBlocked(AStar):
             return (x, y) in self.blocked
         
         self.neighbors[vertex] = []
-        self_blocked = is_blocked(vertex.x, vertex.y)
-        
+
         x = vertex.x - 1
         y = vertex.y - 1
-        north_west_neighbor = None
-        north_west_blocked = is_blocked(x, y)
-        if y >= 0 and x >= 0 and not north_west_blocked:
-            north_west_neighbor = Vertex(x, y, self)
+        north_west_neighbor = Vertex(x,y,self)
+
+        x = vertex.x
+        y = vertex.y - 1
+        north_neighbor = Vertex(x,y,self)
+
+        x = vertex.x + 1
+        y = vertex.y
+        east_neighbor = Vertex(x,y,self)
+
+        x = vertex.x - 1
+        y = vertex.y
+        west_neighbor = Vertex(x,y,self)
+
+        x = vertex.x
+        y = vertex.y + 1
+        south_neighbor = Vertex(x,y,self)
+
+        x = vertex.x + 1
+        y = vertex.y - 1
+        north_east_neighbor = Vertex(x,y,self)
+
+        x = vertex.x + 1
+        y = vertex.y + 1
+        south_east_neighbor = Vertex(x,y,self)
+
+        x = vertex.x - 1
+        y = vertex.y + 1
+        south_west_neighbor = Vertex(x,y,self)
+        
+        if north_neighbor is not None:
+            if vertex.x > 1:
+                if not is_blocked(north_neighbor.x, north_neighbor.y) or not is_blocked(vertex.x, vertex.y):
+                    if is_blocked(north_west_neighbor.x, north_west_neighbor.y):
+                        self.neighbors[vertex].append(north_neighbor)
+                    elif is_blocked(north_west_neighbor.x, north_west_neighbor.y) and not is_blocked(north_neighbor.x, north_neighbor.y):
+                        self.neighbors[vertex].append(north_neighbor)
+                elif north_neighbor.x == 0:
+                    self.neighbors[vertex].append(north_neighbor)
+                elif not is_blocked(north_west_neighbor.x, north_west_neighbor.y) and not is_blocked(west_neighbor.x, west_neighbor.y):
+                    self.neighbors[vertex].append(north_neighbor)
+            elif not is_blocked(north_neighbor.x, north_neighbor.y) and north_neighbor.y >= 0 and not is_blocked(vertex.x, vertex.y):
+                self.neighbors[vertex].append(north_neighbor)
+
+        if south_neighbor.y < len(self.grid):
+            if vertex.x == 0 and not is_blocked(vertex.x, vertex.y):
+                self.neighbors[vertex].append(south_neighbor)
+            elif vertex.x != 0 and (not is_blocked(west_neighbor.x, west_neighbor.y) or not is_blocked(vertex.x, vertex.y)):
+                self.neighbors[vertex].append(south_neighbor)
+            
+        if east_neighbor.x < len(self.grid):
+            if east_neighbor.y != 0:
+                if not is_blocked(north_neighbor.x, north_neighbor.y) or not is_blocked(vertex.x, vertex.y):
+                    self.neighbors[vertex].append(east_neighbor)
+            elif not is_blocked(vertex.x, vertex.y):
+                self.neighbors[vertex].append(east_neighbor)
+
+        if west_neighbor.x >= 0:
+            if north_west_neighbor.x >= 0 and north_west_neighbor.y >= 0:
+                if not is_blocked(west_neighbor.x, west_neighbor.y) or not is_blocked(north_west_neighbor.x, north_west_neighbor.y):
+                    self.neighbors[vertex].append(west_neighbor)
+            elif not is_blocked(west_neighbor.x, west_neighbor.y):
+                self.neighbors[vertex].append(west_neighbor)
+
+        if north_east_neighbor.x < len(self.grid[0]) and north_east_neighbor.y >= 0:
+            if not is_blocked(north_neighbor.x, north_neighbor.y):
+                self.neighbors[vertex].append(north_east_neighbor)
+
+        if north_west_neighbor.x >= 0 and north_west_neighbor.y >= 0 and not is_blocked(north_west_neighbor.x, north_west_neighbor.y):
             self.neighbors[vertex].append(north_west_neighbor)
-        
-        x = vertex.x
-        y = vertex.y - 1
-        north_neighbor = None
-        north_blocked = is_blocked(x, y) if y > 0 else True
-        if y >= 0 and not (north_west_blocked and north_blocked) and x < len(self.grid[0]) - 1 and (x == 0 and not north_blocked):
-            north_neighbor = Vertex(x, y, self)
-            self.neighbors[vertex].append(north_neighbor)
 
-        x = vertex.x + 1
-        y = vertex.y
-        east_neighbor = None
-        if x < len(self.grid[0]) and not (self_blocked and north_blocked) and not (north_blocked and y == len(self.grid) -1):
-            east_neighbor = Vertex(x, y, self)
-            self.neighbors[vertex].append(east_neighbor)
-
-        x = vertex.x - 1
-        y = vertex.y
-        west_neighbor = None
-        west_blocked = is_blocked(x, y)
-        if (x == 0 and not west_blocked) and (not north_west_blocked and y < len(self.grid) - 1) and not (west_blocked and north_west_blocked):
-            west_neighbor = Vertex(x, y, self)
-            self.neighbors[vertex].append(west_neighbor)
-        
-        x = vertex.x
-        y = vertex.y + 1
-        south_neighbor = None
-        if y < len(self.grid) and not (self_blocked and west_blocked) and (x == 0 and not self_blocked):
-            south_neighbor = Vertex(x, y, self)
-            self.neighbors[vertex].append(south_neighbor)
-        
-        x = vertex.x + 1
-        y = vertex.y - 1
-        north_east_neighbor = None
-        if y >= 0 and x < len(self.grid[0]) and not north_blocked:
-            north_east_neighbor = Vertex(x, y, self)
-            self.neighbors[vertex].append(north_east_neighbor)
-
-        x = vertex.x + 1
-        y = vertex.y + 1
-        south_east_neighbor = None
-        if y < len(self.grid) and x < len(self.grid[0]) and not self_blocked:
-            south_east_neighbor = Vertex(x, y, self)
+        if south_east_neighbor.x < len(self.grid[0]) and south_east_neighbor.y < len(self.grid) and not is_blocked(vertex.x, vertex.y):
             self.neighbors[vertex].append(south_east_neighbor)
-        
-        x = vertex.x - 1
-        y = vertex.y + 1
-        south_west_neighbor = None
-        if y < len(self.grid) and x >= 0 and not west_blocked:
-            south_west_neighbor = Vertex(x, y, self)
+
+        if south_west_neighbor.x >= 0 and south_west_neighbor.y < len(self.grid) and not is_blocked(west_neighbor.x, west_neighbor.y):
             self.neighbors[vertex].append(south_west_neighbor)
         
     def run(self):
