@@ -187,8 +187,8 @@ class AStarBlocked(AStar):
             blocked_cell_count = (large - 1) * (small) // 3
 
         while count < blocked_cell_count:
-            col = random.randint(0, cols - 2)
-            row = random.randint(0, rows - 2)
+            col = random.randint(0, cols - 1)
+            row = random.randint(0, rows - 1)
             
             if (col, row) not in blocked:
                 blocked.append((col, row))
@@ -237,7 +237,7 @@ class AStarBlocked(AStar):
         x = vertex.x - 1
         y = vertex.y + 1
         south_west_neighbor = Vertex(x,y,self)
-        
+
         if north_neighbor is not None:
             if vertex.x > 1:
                 if not is_blocked(north_neighbor.x, north_neighbor.y) or not is_blocked(vertex.x, vertex.y):
